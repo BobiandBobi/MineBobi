@@ -2,59 +2,34 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Grid Ayarlı Blok Oyunu</title>
+  <title>Grid Blok Oyunu</title>
   <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-    }
-
+    body { margin: 0; background: #111; color: white; font-family: sans-serif; }
     .toolbar {
       position: absolute;
       top: 10px;
       left: 10px;
       display: flex;
-      align-items: center;
       gap: 10px;
       background: #222;
       padding: 8px 12px;
       border-radius: 10px;
       z-index: 10;
     }
-
-    .toolbar button {
+    .toolbar button, .toolbar input {
       background: transparent;
       border: none;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 6px;
-      transition: background 0.2s;
       color: white;
-      font-size: 18px;
-      user-select: none;
-    }
-
-    .toolbar button:hover {
-      background: #333;
-    }
-
-    .toolbar svg {
-      width: 24px;
-      height: 24px;
-      fill: #fff;
     }
 
     .toolbar input {
       width: 50px;
       background: #000;
       border: 1px solid #555;
-      color: white;
       padding: 4px;
       border-radius: 4px;
       text-align: center;
-      user-select: none;
     }
 
     #container {
@@ -64,7 +39,6 @@
       height: 100vh;
       padding-top: 60px;
       gap: 20px;
-      box-sizing: border-box;
     }
 
     .grid-wrapper {
@@ -75,51 +49,63 @@
 
     .grid {
       display: grid;
-      user-select: none;
       border: 2px solid #444;
       border-radius: 8px;
-      position: relative;
-      z-index: 2;
       background-color: transparent;
+      position: relative;
+      z-index: 1;
+      user-select: none;
     }
 
     .cell {
       width: 40px;
       height: 40px;
-      background-color: transparent;
       background-size: cover;
       background-position: center;
       box-sizing: border-box;
       cursor: pointer;
+      transform: rotate(0deg);
       transition: outline 0.15s;
     }
 
-    .cell:hover {
-      outline: 1px solid #666;
+    .cell:hover { outline: 1px solid #666; }
+
+    #preview-block {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 2;
+      display: none;
+      transform: rotate(0deg);
     }
 
     #catalog {
       background: #222;
       padding: 15px;
       border-radius: 10px;
-      width: auto;
       color: white;
-      user-select: none;
-      font-family: sans-serif;
       text-align: center;
     }
 
-    #catalog h3 {
-      display: none; /* Başlığı gizledim */
-    }
-
-    #catalog .blocks-row {
+    .category {
       display: flex;
-      gap: 0; /* Boşluk sıfırlandı */
+      align-items: center;
+      gap: 8px;
       justify-content: center;
       margin-top: 10px;
-      margin-bottom: 0;
-      flex-wrap: nowrap; /* Satır kaymasına izin verme */
+    }
+
+    .category:first-child { margin-top: 0; }
+
+    .blocks-row {
+      display: flex;
+      gap: 0;
+      justify-content: center;
+      flex-wrap: nowrap;
     }
 
     .block-option {
@@ -128,218 +114,204 @@
       border: 2px solid transparent;
       border-radius: 8px;
       cursor: pointer;
-      transition: border-color 0.25s ease, filter 0.25s ease;
+      transition: border-color .25s, filter .25s;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
     }
 
     .block-option img {
       width: 36px;
       height: 36px;
       pointer-events: none;
-      user-select: none;
     }
 
-    .block-option:hover {
-      filter: brightness(1.2);
-    }
-
-    .block-option.selected {
-      border-color: #4caf50;
-      filter: brightness(1.3);
-    }
+    .block-option:hover { filter: brightness(1.2); }
+    .block-option.selected { border-color: #4caf50; filter: brightness(1.3); }
   </style>
 </head>
 <body>
   <div class="toolbar">
-    <button id="clearBtn" title="çöp kutusu">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
-        <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
-      </svg>
-    </button>
+    <button id="clearBtn" title="Temizle">🗑️</button>
     <input type="number" id="gridSizeInput" min="1" max="50" value="15" />
   </div>
 
   <div id="container">
     <div class="grid-wrapper" id="grid-wrapper">
       <div class="grid" id="grid"></div>
+      <div id="preview-block"></div>
     </div>
 
     <div id="catalog">
-      <div class="blocks-row">
-        <div class="block-option selected" data-type="grass" title="Grass Block">
-          <img src="https://i.ibb.co/7tpJP1Xh/paint.png" alt="Grass Block" />
+      <!-- Kategori 1 -->
+      <div class="category">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#698deb">
+          <path d="M240-320h320v-80H240v80Zm0-160h480v-80H240v80Zm-80 320q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Z"/>
+        </svg>
+        <div class="blocks-row">
+          <div class="block-option selected" data-type="grass" title="Grass Block"><img src="https://i.ibb.co/7tpJP1Xh/paint.png" /></div>
+          <div class="block-option" data-type="snowygrass" title="Snowy Grass Block"><img src="https://i.ibb.co/v6vLvXKq/snowy-grass.png" /></div>
+          <div class="block-option" data-type="dirtpathgrass" title="Dirt Path Grass Block"><img src="https://i.ibb.co/NGb92sJ/dirt-path-grass.png" /></div>
+          <div class="block-option" data-type="podzolgrass" title="Podzol Side Grass Block"><img src="https://i.ibb.co/JjjgtfgQ/Podzol-side-texture-JE1-BE1.webp" /></div>
+          <div class="block-option" data-type="sand" title="Sand Block"><img src="https://i.ibb.co/hR0y1bSp/Sand-texture-JE5-BE3.webp" /></div>
+          <div class="block-option" data-type="ice" title="Ice Block"><img src="https://i.ibb.co/HpX1bWHL/Ice-texture-JE2-BE6.webp" /></div>
+          <div class="block-option" data-type="dirt" title="Dirt Block"><img src="https://i.ibb.co/MkkShhzj/dirt.png" /></div>
+          <div class="block-option" data-type="oakleaves" title="Oak Leaves"><img src="https://i.ibb.co/2YNsbz9d/oakleaves.png" /></div>
+          <div class="block-option" data-type="oaklog" title="Oak Log"><img src="https://i.ibb.co/sJ9Mt3Lc/oaklog.png" /></div>
         </div>
-        <div class="block-option" data-type="dirt" title="Dirt Block">
-          <img src="https://i.ibb.co/MkkShhzj/dirt.png" alt="Dirt Block" />
-        </div>
-        <div class="block-option" data-type="oaklog" title="Oak Log">
-          <img src="https://i.ibb.co/sJ9Mt3Lc/oaklog.png" alt="Oak Log" />
-        </div>
-        <div class="block-option" data-type="oakleaves" title="Oak Leaves">
-          <img src="https://i.ibb.co/2YNsbz9d/oakleaves.png" alt="Oak Leaves" />
-        </div>
-        <div class="block-option" data-type="stone" title="Stone Block">
-          <img src="https://i.ibb.co/v4pLKsgc/stone.png" alt="Stone Block" />
-        </div>
-        <div class="block-option" data-type="coal" title="Coal Ore">
-          <img src="https://i.ibb.co/8nbyqwdv/coal.png" alt="Coal Ore" />
-        </div>
-        <div class="block-option" data-type="iron" title="Iron Ore">
-          <img src="https://i.ibb.co/QFnvpJwy/iron.png" alt="Iron Ore" />
+      </div>
+
+      <!-- Kategori 2 -->
+      <div class="category">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#698deb">
+          <path d="M240-320h320v-80H240v80Zm0-160h480v-80H240v80Zm-80 320q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Z"/>
+        </svg>
+        <div class="blocks-row">
+          <div class="block-option" data-type="stone" title="Stone Block"><img src="https://i.ibb.co/v4pLKsgc/stone.png" /></div>
+          <div class="block-option" data-type="coal" title="Coal Ore"><img src="https://i.ibb.co/8nbyqwdv/coal.png" /></div>
+          <div class="block-option" data-type="iron" title="Iron Ore"><img src="https://i.ibb.co/QFnvpJwy/iron.png" /></div>
+          <div class="block-option" data-type="gold" title="Gold Ore"><img src="https://i.ibb.co/FkKs99Bm/gold-ore.png" /></div>
+          <div class="block-option" data-type="redstone" title="Redstone Ore"><img src="https://i.ibb.co/xNcwZ7c/redstone-ore.png" /></div>
+          <div class="block-option" data-type="emerald" title="Emerald Ore"><img src="https://i.ibb.co/TDMms4ZQ/emerald-ore.png" /></div>
+          <div class="block-option" data-type="copper" title="Copper Ore"><img src="https://i.ibb.co/8gG5StBm/copper-ore.png" /></div>
+          <div class="block-option" data-type="diamond" title="Diamond Ore"><img src="https://i.ibb.co/Vcrth0vR/diamond-ore.png" /></div>
+          <div class="block-option" data-type="lapis" title="Lapis Lazuli Ore"><img src="https://i.ibb.co/gZX3G1p6/lapis-lazuli-ore.png" /></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const GRASS_BLOCK = 'https://i.ibb.co/7tpJP1Xh/paint.png';
-    const DIRT_BLOCK = 'https://i.ibb.co/MkkShhzj/dirt.png';
-    const OAKLOG_BLOCK = 'https://i.ibb.co/sJ9Mt3Lc/oaklog.png';
-    const OAKLEAVES_BLOCK = 'https://i.ibb.co/2YNsbz9d/oakleaves.png';
-    const STONE_BLOCK = 'https://i.ibb.co/v4pLKsgc/stone.png';
-    const COAL_BLOCK = 'https://i.ibb.co/8nbyqwdv/coal.png';
-    const IRON_BLOCK = 'https://i.ibb.co/QFnvpJwy/iron.png';
+    const BLOCK_URLS = {
+      grass: 'https://i.ibb.co/7tpJP1Xh/paint.png',
+      snowygrass: 'https://i.ibb.co/v6vLvXKq/snowy-grass.png',
+      dirtpathgrass: 'https://i.ibb.co/NGb92sJ/dirt-path-grass.png',
+      podzolgrass: 'https://i.ibb.co/JjjgtfgQ/Podzol-side-texture-JE1-BE1.webp',
+      sand: 'https://i.ibb.co/hR0y1bSp/Sand-texture-JE5-BE3.webp',
+      ice: 'https://i.ibb.co/HpX1bWHL/Ice-texture-JE2-BE6.webp',
+      dirt: 'https://i.ibb.co/MkkShhzj/dirt.png',
+      oakleaves: 'https://i.ibb.co/2YNsbz9d/oakleaves.png',
+      oaklog: 'https://i.ibb.co/sJ9Mt3Lc/oaklog.png',
+      stone: 'https://i.ibb.co/v4pLKsgc/stone.png',
+      coal: 'https://i.ibb.co/8nbyqwdv/coal.png',
+      iron: 'https://i.ibb.co/QFnvpJwy/iron.png',
+      gold: 'https://i.ibb.co/FkKs99Bm/gold-ore.png',
+      redstone: 'https://i.ibb.co/xNcwZ7c/redstone-ore.png',
+      emerald: 'https://i.ibb.co/TDMms4ZQ/emerald-ore.png',
+      copper: 'https://i.ibb.co/8gG5StBm/copper-ore.png',
+      diamond: 'https://i.ibb.co/Vcrth0vR/diamond-ore.png',
+      lapis: 'https://i.ibb.co/gZX3G1p6/lapis-lazuli-ore.png'
+    };
 
     const gridEl = document.getElementById('grid');
+    const previewBlock = document.getElementById('preview-block');
     const gridWrapper = document.getElementById('grid-wrapper');
     const clearBtn = document.getElementById('clearBtn');
     const gridSizeInput = document.getElementById('gridSizeInput');
-
     const blockOptions = document.querySelectorAll('.block-option');
 
-    let ROWS = 15, COLS = 15;
-    let cells = [];
-
+    let ROWS = 15, COLS = 15, cells = [];
     let selectedBlock = 'grass';
+    let isDown = false;
+    let rotation = 0;
 
-    function getCell(row, col) {
-      if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return null;
-      return cells[row * COLS + col];
+    function getCell(r, c) {
+      return (r >= 0 && r < ROWS && c >= 0 && c < COLS) ? cells[r * COLS + c] : null;
     }
 
-    function setBlock(cell, type) {
-      if (!cell) return;
-      if (type === 'empty') {
-        cell.style.backgroundImage = '';
-        cell.dataset.state = 'empty';
-      } else if (type === 'grass') {
-        cell.style.backgroundImage = `url('${GRASS_BLOCK}')`;
-        cell.dataset.state = 'grass';
-      } else if (type === 'dirt') {
-        cell.style.backgroundImage = `url('${DIRT_BLOCK}')`;
-        cell.dataset.state = 'dirt';
-      } else if (type === 'oaklog') {
-        cell.style.backgroundImage = `url('${OAKLOG_BLOCK}')`;
-        cell.dataset.state = 'oaklog';
-      } else if (type === 'oakleaves') {
-        cell.style.backgroundImage = `url('${OAKLEAVES_BLOCK}')`;
-        cell.dataset.state = 'oakleaves';
-      } else if (type === 'stone') {
-        cell.style.backgroundImage = `url('${STONE_BLOCK}')`;
-        cell.dataset.state = 'stone';
-      } else if (type === 'coal') {
-        cell.style.backgroundImage = `url('${COAL_BLOCK}')`;
-        cell.dataset.state = 'coal';
-      } else if (type === 'iron') {
-        cell.style.backgroundImage = `url('${IRON_BLOCK}')`;
-        cell.dataset.state = 'iron';
-      }
+    function setBlock(cell, type, rot = 0) {
+      cell.style.backgroundImage = type === 'empty' ? '' : `url('${BLOCK_URLS[type]}')`;
+      cell.dataset.state = type;
+      cell.style.transform = `rotate(${rot}deg)`;
+    }
+
+    function isGrassType(state) {
+      return state.toLowerCase().includes('grass');
     }
 
     function updateDirt() {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const current = getCell(r, c);
-          const above = getCell(r - 1, c);
-
-          if (current && current.dataset.state === 'grass') {
-            if (above && (above.dataset.state === 'grass' || above.dataset.state === 'dirt')) {
-              setBlock(current, 'dirt');
-            }
+          const cur = getCell(r, c), above = getCell(r - 1, c);
+          if (cur && isGrassType(cur.dataset.state)) {
+            if (above && above.dataset.state !== 'empty') setBlock(cur, 'dirt', 0);
           }
         }
       }
     }
 
-    function createGrid(rows, cols) {
-      ROWS = rows;
-      COLS = cols;
-      gridEl.innerHTML = '';
-      gridEl.style.gridTemplateColumns = `repeat(${COLS}, 40px)`;
-      gridEl.style.gridTemplateRows = `repeat(${ROWS}, 40px)`;
-      cells = [];
-
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cell = document.createElement('div');
-          cell.classList.add('cell');
-          cell.dataset.state = 'empty';
-          cell.dataset.row = r;
-          cell.dataset.col = c;
-          gridEl.appendChild(cell);
-          cells.push(cell);
-        }
+    function createGrid(r, c) {
+      ROWS = r; COLS = c; cells = []; gridEl.innerHTML = '';
+      gridEl.style.gridTemplate = `repeat(${r},40px)/repeat(${c},40px)`;
+      for (let i = 0; i < r * c; i++) {
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        div.dataset.state = 'empty';
+        gridEl.appendChild(div);
+        cells.push(div);
       }
-
-      gridWrapper.style.width = `${COLS * 40}px`;
-      gridWrapper.style.height = `${ROWS * 40}px`;
+      gridWrapper.style.width = `${c * 40}px`;
+      gridWrapper.style.height = `${r * 40}px`;
     }
 
-    blockOptions.forEach(opt => {
-      opt.addEventListener('click', () => {
-        blockOptions.forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        selectedBlock = opt.dataset.type;
+    blockOptions.forEach(o => {
+      o.addEventListener('click', () => {
+        blockOptions.forEach(x => x.classList.remove('selected'));
+        o.classList.add('selected');
+        selectedBlock = o.dataset.type;
+        previewBlock.style.backgroundImage = `url('${BLOCK_URLS[selectedBlock]}')`;
       });
     });
 
-    let isMouseDown = false;
+    gridEl.addEventListener('mousemove', e => {
+      const rect = gridEl.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / 40);
+      const y = Math.floor((e.clientY - rect.top) / 40);
+      previewBlock.style.left = `${x * 40}px`;
+      previewBlock.style.top = `${y * 40}px`;
+      previewBlock.style.display = 'block';
+      previewBlock.style.backgroundImage = `url('${BLOCK_URLS[selectedBlock]}')`;
+      previewBlock.style.transform = `rotate(${rotation}deg)`;
+    });
 
-    gridEl.addEventListener('mousedown', (e) => {
+    gridEl.addEventListener('mouseleave', () => {
+      previewBlock.style.display = 'none';
+    });
+
+    gridEl.addEventListener('mousedown', e => {
       if (!e.target.classList.contains('cell')) return;
-      isMouseDown = true;
-      const cell = e.target;
-      if (e.shiftKey) {
-        setBlock(cell, 'empty');
-      } else {
-        setBlock(cell, selectedBlock);
-      }
-      updateDirt();
       e.preventDefault();
-    });
-
-    gridEl.addEventListener('mousemove', (e) => {
-      if (!isMouseDown) return;
-      if (!e.target.classList.contains('cell')) return;
-      const cell = e.target;
-      if (e.shiftKey) {
-        setBlock(cell, 'empty');
-      } else {
-        setBlock(cell, selectedBlock);
+      isDown = true;
+      if (e.button === 2) {
+        rotation = (rotation + 90) % 360;
+        previewBlock.style.transform = `rotate(${rotation}deg)`;
+        return;
       }
+      if (e.shiftKey) setBlock(e.target, 'empty');
+      else setBlock(e.target, selectedBlock, rotation);
       updateDirt();
     });
 
-    window.addEventListener('mouseup', () => {
-      isMouseDown = false;
-    });
-
-    clearBtn.addEventListener('click', () => {
-      for (const cell of cells) {
-        setBlock(cell, 'empty');
+    gridEl.addEventListener('mousemove', e => {
+      if (!e.target.classList.contains('cell')) return;
+      if (isDown && e.buttons === 1) {
+        if (e.shiftKey) setBlock(e.target, 'empty');
+        else setBlock(e.target, selectedBlock, rotation);
+        updateDirt();
       }
     });
 
+    window.addEventListener('mouseup', () => isDown = false);
+    clearBtn.addEventListener('click', () => cells.forEach(c => setBlock(c, 'empty')));
     gridSizeInput.addEventListener('input', () => {
-      const newSize = parseInt(gridSizeInput.value);
-      if (!isNaN(newSize) && newSize > 0 && newSize <= 50) {
-        createGrid(newSize, newSize);
-      }
+      const n = parseInt(gridSizeInput.value);
+      if (!isNaN(n) && n > 0 && n <= 50) createGrid(n, n);
     });
+
+    window.addEventListener('contextmenu', e => e.preventDefault());
 
     createGrid(ROWS, COLS);
+    previewBlock.style.backgroundImage = `url('${BLOCK_URLS[selectedBlock]}')`;
   </script>
 </body>
 </html>
